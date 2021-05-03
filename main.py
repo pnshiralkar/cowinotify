@@ -1,12 +1,27 @@
 import datetime
+import time
 
 import requests
 
 from sms import send_sms
 
-INTERVAL = 60 * 2
-PIN_CODES = ['415110']
-SUBSCRIBED_PHONE_NUMBERS = ['+919075577238']
+INTERVAL = 60 * 1
+RESEND_SMS_INTERVAL = 60 * 3
+
+PINCODES_PHONE_NUMBERS = {
+    '000000': ['+911234567890']
+}
+
+cache = {}
+"""
+cache = {
+    'pincode': {
+        'message': 'message',
+        'time': datetime,
+    },
+    ...
+}
+"""
 
 
 def check_availability(pincode, date):
@@ -24,7 +39,7 @@ def check_availability(pincode, date):
         min_18_dates = []
         min_45_dates = []
         for session in center['sessions']:
-            if session['available_capacity'] > -1:   # TODO: change to 0
+            if session['available_capacity'] > -1:  # TODO: change to 0
                 if not available:
                     available = True
                     available_in_pincode = True
@@ -43,11 +58,32 @@ def check_availability(pincode, date):
 
 def check():
     date = datetime.datetime.now().strftime("%d-%m-%Y")
-    for pc in PIN_CODES:
+    for pc in PINCODES_PHONE_NUMBERS:
         available, message = check_availability(pc, date)
         if available:
-            for phone in SUBSCRIBED_PHONE_NUMBERS:
-                send_sms(phone, message)
+            should_send = False
+            if pc not in cache:
+                should_send = True
+            else:
+                delta = datetime.datetime.now() - cache[pc]['time']
+                if cache[pc]['message'] != message or delta.seconds >= RESEND_SMS_INTERVAL:
+                    print(cache[pc]['message'] != message, delta.seconds >= RESEND_SMS_INTERVAL)
+                    should_send = True
+
+            if should_send:
+                cache[pc] = {
+                    'message': message,
+                    'time': datetime.datetime.now()
+                }
+                for phone in PINCODES_PHONE_NUMBERS[pc]:
+                    send_sms(phone, message, mock=True)
 
 
-check()
+def main():
+    while True:
+        check()
+        time.sleep(INTERVAL)
+
+
+if __name__ == '__main__':
+    main()
