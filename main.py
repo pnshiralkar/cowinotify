@@ -3,14 +3,9 @@ import time
 
 import requests
 
+from config import PINCODES_PHONE_NUMBERS, RESEND_SMS_INTERVAL, CHECK_INTERVAL, MOCK_SMS
 from sms import send_sms
 
-INTERVAL = 60 * 1
-RESEND_SMS_INTERVAL = 60 * 3
-
-PINCODES_PHONE_NUMBERS = {
-    '000000': ['+911234567890']
-}
 
 cache = {}
 """
@@ -39,7 +34,7 @@ def check_availability(pincode, date):
         min_18_dates = []
         min_45_dates = []
         for session in center['sessions']:
-            if session['available_capacity'] > -1:  # TODO: change to 0
+            if session['available_capacity'] > 0:
                 if not available:
                     available = True
                     available_in_pincode = True
@@ -67,7 +62,6 @@ def check():
             else:
                 delta = datetime.datetime.now() - cache[pc]['time']
                 if cache[pc]['message'] != message or delta.seconds >= RESEND_SMS_INTERVAL:
-                    print(cache[pc]['message'] != message, delta.seconds >= RESEND_SMS_INTERVAL)
                     should_send = True
 
             if should_send:
@@ -76,13 +70,13 @@ def check():
                     'time': datetime.datetime.now()
                 }
                 for phone in PINCODES_PHONE_NUMBERS[pc]:
-                    send_sms(phone, message, mock=True)
+                    send_sms(phone, message, mock=MOCK_SMS)
 
 
 def main():
     while True:
         check()
-        time.sleep(INTERVAL)
+        time.sleep(CHECK_INTERVAL)
 
 
 if __name__ == '__main__':
