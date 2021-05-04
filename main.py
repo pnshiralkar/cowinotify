@@ -1,11 +1,11 @@
 import datetime
 import time
 
+import pytz as pytz
 import requests
 
 from config import PINCODES_PHONE_NUMBERS, RESEND_SMS_INTERVAL, CHECK_INTERVAL, MOCK_SMS
 from sms import send_sms
-
 
 cache = {}
 """
@@ -17,6 +17,11 @@ cache = {
     ...
 }
 """
+
+
+def get_time_now():
+    tz = pytz.timezone('Asia/Kolkata')
+    return datetime.datetime.now(tz=tz)
 
 
 def check_availability(pincode, date):
@@ -52,7 +57,8 @@ def check_availability(pincode, date):
 
 
 def check():
-    date = datetime.datetime.now().strftime("%d-%m-%Y")
+    num_sms_sent = 0
+    date = get_time_now().strftime("%d-%m-%Y")
     for pc in PINCODES_PHONE_NUMBERS:
         available, message = check_availability(pc, date)
         if available:
@@ -60,22 +66,25 @@ def check():
             if pc not in cache:
                 should_send = True
             else:
-                delta = datetime.datetime.now() - cache[pc]['time']
+                delta = get_time_now() - cache[pc]['time']
                 if cache[pc]['message'] != message or delta.seconds >= RESEND_SMS_INTERVAL:
                     should_send = True
 
             if should_send:
                 cache[pc] = {
                     'message': message,
-                    'time': datetime.datetime.now()
+                    'time': get_time_now()
                 }
                 for phone in PINCODES_PHONE_NUMBERS[pc]:
+                    num_sms_sent += 1
                     send_sms(phone, message, mock=MOCK_SMS)
+    return num_sms_sent
 
 
 def main():
     while True:
-        check()
+        num_sms_sent = check()
+        print(f"Checked at {get_time_now().strftime('%d-%m-%Y %I:%M %p')} : Sent {num_sms_sent} SMS")
         time.sleep(CHECK_INTERVAL)
 
 
