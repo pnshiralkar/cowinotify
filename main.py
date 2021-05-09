@@ -55,6 +55,7 @@ def check_availability(pincode, date):
                     min_18_dates.append(session['date'])
                 elif session['min_age_limit'] <= 45:
                     min_45_dates.append(session['date'])
+                print(f"{center['name']} - {session['date']} : Min Age = {session['min_age_limit']}, Capacity = {session['available_capacity']}")
         if available:
             message += f"\n{center['name']}:\n"
             if len(min_18_dates) > 0:
