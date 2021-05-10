@@ -1,5 +1,6 @@
 # CowiNotify
-**Get SMS when vaccine is available at specific pincode**
+**Get SMS when vaccine is available at specific pincode**\
+**Tested and working well (helped me get the dose as well :P)**
 
 -----
 
