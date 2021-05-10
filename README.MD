@@ -26,3 +26,6 @@
 3. Create a Event rule (from AWS Cloudwatch dashboard) of type schedule and frequency 1 min and with target lambda function.
 5. Run ```./build_lambda.sh``` whenever you change config/code.
 6. Upload the created ```build.zip``` as code to lambda function
+
+
+## Do give a Star 🌟 if you liked/found it useful!
